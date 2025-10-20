@@ -1,0 +1,75 @@
+# ---------------------------
+# 🌍 Environment files (anywhere)
+# ---------------------------
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+
+# ---------------------------
+# 🧱 Node dependencies (all subfolders)
+# ---------------------------
+node_modules/
+**/node_modules/
+
+# ---------------------------
+# ⚙️ Build / dist / Next.js outputs
+# ---------------------------
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.cache/
+**/.cache/
+
+# ---------------------------
+# 📦 Lock files (optional)
+# ---------------------------
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ---------------------------
+# 🧩 Editor & system junk
+# ---------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.orig
+
+# ---------------------------
+# 🧾 Logs
+# ---------------------------
+logs/
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------------------------
+# 🧰 Coverage / temp
+# ---------------------------
+coverage/
+**/coverage/
+.nyc_output/
+*.tsbuildinfo
+*.tmp
+*.temp
+*.bak
+
+# ---------------------------
+# 🚀 OS & cache
+# ---------------------------
+*.pid
+*.pid.lock
+*.seed

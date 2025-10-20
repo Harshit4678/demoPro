@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: ci_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ci_root
+      MONGO_INITDB_ROOT_PASSWORD: SuperSecretRoot123!
+      MONGO_INITDB_DATABASE: careindia_db
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017" 
+    networks:
+      - ci-network
+     
+
+  backend:
+    build:
+      context: ./backend-cms
+    container_name: ci_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend-cms/.env
+    depends_on:
+      - mongo
+    ports:
+      - "5000:5000"
+    networks:
+      - ci-network
+
+  mongo-express:
+    image: mongo-express:1.0.0
+    container_name: ci_mongo_express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ci_root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: SuperSecretRoot123!
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASIC_AUTH_USERNAME: admin
+      ME_CONFIG_BASIC_AUTH_PASSWORD: adminpass
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    networks:
+      - ci-network
+
+volumes:
+  mongo_data:
+
+networks:
+  ci-network:
+    driver: bridge
