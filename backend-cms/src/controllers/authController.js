@@ -1,51 +1,33 @@
-import asyncHandler from 'express-async-handler';
-import { User } from '../models/User.js';
-import { signToken, setAuthCookie, clearAuthCookie } from '../utils/jwt.js';
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import AdminUser from "../models/adminModel.js";
 
-export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user || !(await user.matchPassword(password))) {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
-  if (user.isBanned) return res.status(403).json({ message: 'Account banned' });
-  if (user.role !== 'superadmin' && user.role !== 'administrator' && user.role !== 'reviewer') {
-    return res.status(403).json({ message: 'Role not allowed' });
-  }
-  const token = signToken({ id: user._id, role: user.role });
-  setAuthCookie(res, token);
-  res.json({
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      forceChangePassword: user.forceChangePassword
-    }
+const signToken = (user) =>
+  jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   });
-});
 
-export const me = asyncHandler(async (req, res) => {
-  const u = req.user;
-  res.json({ user: { id: u._id || u.id, name: u.name, email: u.email, role: u.role, forceChangePassword: u.forceChangePassword } });
-});
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body || {};
+    const normEmail = email && String(email).toLowerCase().trim();
 
-export const logout = asyncHandler(async (_req, res) => {
-  clearAuthCookie(res);
-  res.json({ message: 'Logged out' });
-});
+    if (!normEmail || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
-// For first-login forced change (after admin-set password)
-export const changeOwnPassword = asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const user = await User.findById(req.user._id || req.user.id);
-  if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await AdminUser.findOne({ email: normEmail });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-  const ok = await user.matchPassword(currentPassword);
-  if (!ok) return res.status(400).json({ message: 'Current password incorrect' });
+    const ok = await bcrypt.compare(password, user.password || "");
+    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
-  user.password = newPassword;
-  user.forceChangePassword = false;
-  await user.save();
-  res.json({ message: 'Password changed' });
-});
+    const token = signToken(user);
+    return res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -1,47 +1,32 @@
-import React, { useEffect } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Login from "./pages/auth/Login.jsx";
-import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
-import ForceChangePassword from "./pages/auth/ForceChangePassword.jsx";
-import Dashboard from "./pages/dashboard/Dashboard.jsx";
-import UserManagement from "./pages/users/UserManagement.jsx";
-import ResetRequests from "./pages/resets/ResetRequests.jsx";
-import AdminLayout from "./layout/AdminLayout.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import useAuth from "./store/authStore.js";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import { useAuthStore } from "./stores/authStore.js";
+
+
+function Protected({ children }) {
+  const token = useAuthStore((s) => s.token);
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
 
 export default function App() {
-  const { hydrate } = useAuth();
-  const loc = useLocation();
-
-  useEffect(() => { hydrate(); }, []);
-
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/forgot" element={<ForgotPassword />} />
-      <Route path="/force-change-password" element={
-        <ProtectedRoute anyRole>
-          <ForceChangePassword />
-        </ProtectedRoute>
-      }/>
-
-      {/* Admin Area */}
-      <Route path="/" element={
-        <ProtectedRoute roles={["superadmin","administrator","reviewer"]}>
-          <AdminLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<Dashboard />} />
-        <Route path="users" element={
-          <ProtectedRoute roles={["superadmin"]}><UserManagement /></ProtectedRoute>
-        }/>
-        <Route path="resets" element={
-          <ProtectedRoute roles={["superadmin"]}><ResetRequests /></ProtectedRoute>
-        }/>
-      </Route>
-
-      <Route path="*" element={<Navigate to={loc?.pathname === "/login" ? "/login" : "/"} replace />} />
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            <Protected>
+              <Dashboard />
+             
+            </Protected>
+          }
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

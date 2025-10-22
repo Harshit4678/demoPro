@@ -2,37 +2,51 @@ import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import path from "path";
 import { connectDB } from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import adminUserRoutes from './routes/adminUserRoutes.js';
-import resetRoutes from './routes/resetRoutes.js';
-import { notFound, errorHandler } from './middleware/errorHandler.js';
+import authRoutes from "./routes/authRoutes.js";
+import errorMiddleware from "./middleware/errorMiddleware.js";
+import aboutRoutes from "./routes/who-we-are/aboutRoutes.js";
+
 
 const app = express();
-
-// ✅ CORS setup
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:5173", // Admin panel (vite)
+  process.env.MAIN_SITE_URL || "http://localhost:3000", // Main Next.js frontend
+];
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN?.split(',') || ['http://localhost:5173'],
-    credentials: true,
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.warn("❌ Blocked by CORS:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // allow cookies if needed
   })
 );
+app.use(express.json({ limit: "2mb" }));
 
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/admin/users', adminUserRoutes);
-app.use('/api/admin/resets', resetRoutes);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.get("/", (req,res) => res.json({ ok:true, msg: "CareIndia Backend CMS" }));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/about", aboutRoutes);
+
+app.use(errorMiddleware);
+
+
 
 // ✅ Health check route
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// ✅ 404 + Error handling
-app.use(notFound);
-app.use(errorHandler);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
