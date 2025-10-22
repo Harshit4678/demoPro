@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { useAuthStore } from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
 
-import AboutTimeline from "../content/who-we-are/AboutTimeline"; 
+import AboutTimeline from "../content/who-we-are/AboutTimeline";
+import LeadsPage from "./LeadsPage"; // integrated leads dashboard
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
@@ -21,7 +22,7 @@ export default function Dashboard() {
     { id: "home", label: "Home Page" },
     { id: "services", label: "Services" },
     { id: "contact", label: "Contact Page" },
-    // add more pages here as needed
+    { id: "leads", label: "Leads Dashboard" } // <-- NEW
   ];
 
   return (
@@ -63,43 +64,51 @@ export default function Dashboard() {
         </aside>
 
         {/* Content area */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-y-auto">
           <div className="mb-4">
             <h3 className="text-2xl font-semibold">
               {TABS.find(t => t.id === activeTab)?.label}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">Simple editor area for {activeTab} content</p>
+            <p className="text-sm text-gray-500 mt-1">Manage and edit content for the selected section</p>
           </div>
 
-          <div className="bg-white p-4 rounded shadow-sm min-h-[320px]">
-            {/* Render tab content: keep it simple and import the proper admin page/component */}
+          <div className="bg-white p-4 rounded shadow-sm min-h-[400px]">
+            {/* About */}
             {activeTab === "about" && (
-              <>
-                {/* AboutTimeline component should provide: list of items + create/edit form */}
-                {/* Replace import above to point to your actual admin AboutTimeline page */}
-                <AboutTimeline onSaved={() => { /* optionally refresh parent */ }} />
-              </>
+              <AboutTimeline onSaved={() => { /* optionally refresh parent */ }} />
             )}
 
+            {/* Home */}
             {activeTab === "home" && (
               <div>
                 <h4 className="font-medium">Home Page content</h4>
                 <p className="text-sm text-gray-600">Create/edit hero, features, banners from here.</p>
-                {/* Add components later */}
+                {/* Add components for Home page editing */}
               </div>
             )}
 
+            {/* Services */}
             {activeTab === "services" && (
               <div>
                 <h4 className="font-medium">Services</h4>
                 <p className="text-sm text-gray-600">Manage services list / icons / ordering.</p>
+                {/* Add components for Services editing */}
               </div>
             )}
 
+            {/* Contact */}
             {activeTab === "contact" && (
               <div>
                 <h4 className="font-medium">Contact</h4>
                 <p className="text-sm text-gray-600">Edit contact details, map embed, form settings.</p>
+                {/* Add components for Contact editing */}
+              </div>
+            )}
+
+            {/* Leads Dashboard */}
+            {activeTab === "leads" && (
+              <div className="p-0">
+                <LeadsPage />
               </div>
             )}
           </div>

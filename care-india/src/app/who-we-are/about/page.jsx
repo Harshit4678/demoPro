@@ -1,11 +1,14 @@
 // app/who-we-are/about/page.jsx
 "use client";
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { useThemeStore } from "@/stores/themeStore";
 
 export default function AboutPage() {
+  const { saffronMid, emeraldMid, GRAD, GRAD_SOFT } = useThemeStore();
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Set via env: NEXT_PUBLIC_API_ORIGIN (recommended) or fallback to http://localhost:5000
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN || "http://localhost:5000";
 
   useEffect(() => {
@@ -30,33 +33,57 @@ export default function AboutPage() {
     };
   }, [API_ORIGIN]);
 
+  const glowShadow = `0 12px 30px ${saffronMid}22, 0 6px 18px ${emeraldMid}11`;
+
   return (
-    <main className="w-full min-h-screen bg-white flex flex-col items-center px-6 md:px-12 pt-16 pb-12">
-      {/* Section 1: Founder profile — ALWAYS render */}
-      <section className="w-full min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-white via-emerald-50 to-white px-6 md:px-12 mb-8">
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[auto_1px_1.2fr] items-center pl-10">
+    <main className="w-full min-h-screen bg-white flex flex-col items-center px-6 md:px-12 pt-16 pb-12 font-sans"
+      style={{
+        background: `linear-gradient(180deg, rgba(255,250,245,0.9), ${GRAD_SOFT})`,
+      }}
+    >
+      {/* Section 1: Founder profile — SIMPLE (no box) but themed */}
+      <section className="w-full min-h-screen flex flex-col justify-center items-center px-6 md:px-12 mb-8">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[auto_1px_1.2fr] items-center pl-6 md:pl-10 gap-6">
           {/* Left: Founder photo and name */}
-          <div className="flex flex-col justify-center items-center text-center space-y-3">
-            <img
-              src="/images/about/Founder.jpg"
-              alt="Mahinder Dobriyal"
-              className="w-52 h-52 rounded-full object-cover shadow-lg mb-3"
-            />
+          <div className="flex flex-col justify-center items-center text-center space-y-3 p-2">
+            <div className="relative w-52 h-52 rounded-full overflow-hidden shadow-md">
+              <Image
+                src="/images/about/Founder.jpg"
+                alt="Mahinder Dobriyal"
+                fill
+                style={{ objectFit: "cover" }}
+                sizes="(min-width: 768px) 208px, 208px"
+              />
+            </div>
+
             <div className="flex flex-col items-center text-center">
-              <h3 className="text-xl font-medium tracking-wide">Mahinder Dobriyal</h3>
+              <h3
+                className="text-xl font-medium tracking-wide"
+                style={{
+                  background: `linear-gradient(90deg, ${emeraldMid}, ${saffronMid})`,
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                Mahinder Dobriyal
+              </h3>
               <div className="w-16 h-1 bg-emerald-500 mx-auto my-2 rounded-full" />
               <p className="text-xl font-medium">Founder</p>
               <p className="text-xl text-slate-600">of Care India Welfare Trust</p>
             </div>
           </div>
 
-          {/* Divider column -- sits exactly between left and right on md+ */}
+          {/* Divider column */}
           <div className="hidden md:block h-full w-px bg-slate-300/60 mx-10" />
 
-          {/* Right: Scrollable biography text */}
+          {/* Right: Biography text - SIMPLE container (no heavy box) */}
           <div
-            className="overflow-y-auto md:pl-20 py-4 prose text-slate-700 text-[18px] leading-relaxed rounded-lg bg-transparent shadow-none max-h-[65vh] pb-6 text-justify"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="overflow-y-auto md:pl-12 py-8 prose text-slate-700 text-[18px] leading-relaxed rounded-lg max-h-[80vh] pb-6 text-justify"
+            style={{
+              background: "transparent",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
           >
             <p>
               <span className="text-[26px] text-amber-600 font-bold">C</span>are India Welfare Trust was founded by Mahinder Dobriyal in 2011,
@@ -72,10 +99,25 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Section 2: Timeline — render always, but show loading/empty inside */}
-      <section className="w-full py-12 bg-white">
+      {/* Section 2: Timeline with centered heading */}
+      <section className="w-full py-12">
         <div className="max-w-5xl mx-auto px-4 space-y-10 relative">
-          {/* Advanced vertical line in the middle */}
+          <div className="text-center mb-6">
+            <h2
+              className="text-3xl md:text-5xl md:pb-5 font-light"
+              style={{
+                background: `linear-gradient(90deg, ${emeraldMid}, ${saffronMid})`,
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              A walk through our journey
+            </h2>
+            <div className="mx-auto mt-3 w-28 h-1 rounded-full"
+                 style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})` }} />
+          </div>
+
+          {/* Vertical line */}
           <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full">
             <div className="w-1 bg-gradient-to-b from-emerald-400 via-emerald-200 to-transparent rounded-full h-full" />
             <div className="absolute top-8 left-1/2 -translate-x-1/2">
@@ -83,7 +125,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Loading state for timeline */}
+          {/* Loading / Empty / Items */}
           {loading ? (
             <div className="w-full py-20 flex items-center justify-center">
               <div className="text-slate-600">Loading timeline...</div>
@@ -97,10 +139,8 @@ export default function AboutPage() {
               const isLeftText =
                 it.side === "left" ? true : it.side === "right" ? false : idx % 2 === 0;
 
-              // Build full image URL if backend saved "/uploads/..." paths or raw filename
               let imgUrl = it.imagePath || it.image || it.imageUrl || null;
               if (imgUrl && imgUrl.startsWith("/uploads")) imgUrl = `${API_ORIGIN}${imgUrl}`;
-              // if backend gave filename only (e.g. "abc.jpg")
               if (imgUrl && !/^https?:\/\//i.test(imgUrl) && !imgUrl.startsWith(API_ORIGIN) && !imgUrl.startsWith("/uploads") && !imgUrl.startsWith("/")) {
                 imgUrl = `${API_ORIGIN}/uploads/${imgUrl}`;
               }
@@ -111,7 +151,7 @@ export default function AboutPage() {
                     <>
                       <div className="order-1 md:order-1">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={it.title} className="w-full h-64 object-cover rounded-lg shadow-sm" />
+                          <img src={imgUrl} alt={it.title} className="w-full h-64 object-cover rounded-lg shadow-sm md:-ml-5" />
                         ) : (
                           <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center text-slate-400">
                             No image
@@ -119,21 +159,55 @@ export default function AboutPage() {
                         )}
                       </div>
                       <div className="order-2 md:order-2 md:pl-10">
-                        <div className="text-sm text-emerald-600 font-medium">{it.session}</div>
-                        <h3 className="text-2xl font-semibold mt-2">{it.title}</h3>
-                        <p className="mt-3 text-slate-700">{it.paragraph}</p>
+                        <div
+                          className="p-6 rounded-lg"
+                          style={{
+                            boxShadow: glowShadow,
+                            background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.96))",
+                          }}
+                        >
+                          <div className="text-sm text-emerald-600 font-medium">{it.session}</div>
+                          <h3
+                            className="text-2xl font-light mt-2"
+                            style={{
+                              background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`,
+                              WebkitBackgroundClip: "text",
+                              color: "transparent",
+                            }}
+                          >
+                            {it.title}
+                          </h3>
+                          <p className="mt-3 text-slate-700">{it.paragraph}</p>
+                        </div>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="order-1 md:order-1 md:pr-10">
-                        <div className="text-sm text-emerald-600 font-medium">{it.session}</div>
-                        <h3 className="text-2xl font-semibold mt-2">{it.title}</h3>
-                        <p className="mt-3 text-slate-700">{it.paragraph}</p>
+                        <div
+                          className="p-6 rounded-lg"
+                          style={{
+                            boxShadow: glowShadow,
+                            background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.96))",
+                          }}
+                        >
+                          <div className="text-sm text-emerald-600 font-medium">{it.session}</div>
+                          <h3
+                            className="text-2xl font-light mt-2"
+                            style={{
+                              background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`,
+                              WebkitBackgroundClip: "text",
+                              color: "transparent",
+                            }}
+                          >
+                            {it.title}
+                          </h3>
+                          <p className="mt-3 text-slate-700">{it.paragraph}</p>
+                        </div>
                       </div>
                       <div className="order-2 md:order-2">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={it.title} className="w-full h-64 object-cover rounded-lg shadow-sm" />
+                          <img src={imgUrl} alt={it.title} className="w-full h-64 object-cover rounded-lg shadow-sm md:ml-5" />
                         ) : (
                           <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center text-slate-400">
                             No image
@@ -150,9 +224,11 @@ export default function AboutPage() {
       </section>
 
       <style jsx global>{`
-        /* Hide visible scrollbar while keeping scroll functionality */
         .prose::-webkit-scrollbar { width: 0; height: 0; }
         .prose { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (max-width: 767px) {
+          .prose { padding: 0 6px; }
+        }
       `}</style>
     </main>
   );

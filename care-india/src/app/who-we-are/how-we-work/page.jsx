@@ -3,8 +3,11 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useThemeStore } from "@/stores/themeStore";
 
 export default function HowWeWorkPage() {
+  const { saffronMid, emeraldMid, GRAD, GRAD_SOFT, animationEnabled, animationSpeed } = useThemeStore();
+
   const timeline = [
     {
       title: "Identifying Needs and Building Awareness",
@@ -42,6 +45,17 @@ export default function HowWeWorkPage() {
     { id: 6, title: "Evaluate Impact", text: "Evaluate the impact of programs through data analysis, feedback, and field visits to measure success and areas for improvement." },
   ];
 
+  const cardMotion = {
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.2 },
+    transition: { duration: 0.5 * (animationEnabled ? animationSpeed : 1) },
+  };
+
+  // branded glow shadows
+  const glowShadow = `0 12px 30px ${saffronMid}22, 0 6px 18px ${emeraldMid}11`;
+  const strongGlow = `0 20px 60px ${saffronMid}33, 0 8px 30px ${emeraldMid}22`;
+
   return (
     <>
       {/* FULL-WIDTH VIDEO - BLEED (no margins) */}
@@ -54,24 +68,31 @@ export default function HowWeWorkPage() {
           loop
           playsInline
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/30 pointer-events-none" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35))" }} />
+
         <div className="absolute left-6 bottom-6 text-white z-10">
           <motion.h2
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-2xl md:text-4xl font-semibold"
+            {...cardMotion}
+            className="text-2xl md:text-4xl font-light drop-shadow-md"
+            style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}
           >
             How we work
           </motion.h2>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-sm md:text-base">
+          <motion.p {...cardMotion} transition={{ delay: 0.15, duration: 0.5 * (animationEnabled ? animationSpeed : 1) }} className="text-sm md:text-base">
             Process, partners and impact — community first.
           </motion.p>
         </div>
+
+        {/* gradient glow */}
+        <div
+          aria-hidden
+          className="absolute right-8 top-8 w-72 h-72 rounded-full opacity-40 blur-3xl pointer-events-none"
+          style={{ background: GRAD_SOFT }}
+        />
       </section>
 
       {/* page content constrained */}
-      <main className="max-w-6xl mx-auto px-6 py-12 prose prose-indigo text-gray-800">
+      <main className="max-w-6xl mx-auto px-6 py-12 text-gray-800">
         {/* BREADCRUMB */}
         <nav className="text-sm text-gray-600 mb-8">
           Home <span className="mx-2">&gt;</span> Who we are <span className="mx-2">&gt;</span> How we work
@@ -79,7 +100,9 @@ export default function HowWeWorkPage() {
 
         {/* BIG SECTION HEADING */}
         <header className="mb-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">How we work</h1>
+          <h1 className="text-4xl md:text-5xl font-light tracking-tight" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>
+            How we work
+          </h1>
           <p className="mt-2 text-gray-600">Our approach from assessment to sustainable impact.</p>
         </header>
 
@@ -91,15 +114,12 @@ export default function HowWeWorkPage() {
               <motion.div
                 key={item.title}
                 className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.6 }}
+                {...cardMotion}
               >
                 {imageFirst ? (
                   <>
                     {/* IMAGE LEFT - full within column */}
-                    <div className="h-64 md:h-64 rounded-lg overflow-hidden shadow-lg">
+                    <div className="h-64 md:h-72 rounded-lg overflow-hidden" style={{ boxShadow: strongGlow }}>
                       <Image
                         src={item.image}
                         alt={item.title}
@@ -113,9 +133,10 @@ export default function HowWeWorkPage() {
                     {/* TEXT RIGHT */}
                     <motion.div
                       whileHover={{ scale: 1.02 }}
-                      className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl border transition-transform duration-200"
+                      className="bg-white p-6 rounded-lg transition-transform duration-200"
+                      style={{ boxShadow: glowShadow }}
                     >
-                      <h3 className="text-xl font-semibold">{item.title}</h3>
+                      <h3 className="text-xl font-light" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>{item.title}</h3>
                       <p className="mt-3 text-gray-600">{item.paragraph}</p>
                     </motion.div>
                   </>
@@ -124,14 +145,15 @@ export default function HowWeWorkPage() {
                     {/* TEXT LEFT */}
                     <motion.div
                       whileHover={{ scale: 1.02 }}
-                      className="bg-white p-6 rounded-lg shadow-md hover:shadow-2xl border transition-transform duration-200"
+                      className="bg-white p-6 rounded-lg transition-transform duration-200"
+                      style={{ boxShadow: glowShadow }}
                     >
-                      <h3 className="text-xl font-semibold">{item.title}</h3>
+                      <h3 className="text-xl font-light" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>{item.title}</h3>
                       <p className="mt-3 text-gray-600">{item.paragraph}</p>
                     </motion.div>
 
                     {/* IMAGE RIGHT */}
-                    <div className="h-64 md:h-64 rounded-lg overflow-hidden shadow-lg">
+                    <div className="h-64 md:h-72 rounded-lg overflow-hidden" style={{ boxShadow: strongGlow }}>
                       <Image
                         src={item.image}
                         alt={item.title}
@@ -150,21 +172,22 @@ export default function HowWeWorkPage() {
 
         {/* PERFORMANCE NUMBERS */}
         <section className="mt-12">
-          <div className="bg-gradient-to-r from-indigo-50 to-white p-6 rounded-lg shadow-inner">
-            <h3 className="text-2xl font-bold">Our Performance In Numbers</h3>
+          <div className="bg-gradient-to-r from-white to-gray-50 p-6 rounded-lg shadow-inner" style={{ boxShadow: `0 8px 30px ${emeraldMid}11` }}>
+            <h3 className="text-2xl font-light" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>Our Performance In Numbers</h3>
             <p className="text-sm text-gray-600">Impacting communities at scale</p>
 
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {stats.map((s) => (
+              {stats.map((s, i) => (
                 <motion.div
                   key={s.label}
                   initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.45 }}
-                  className="p-4 border rounded-lg text-center bg-white shadow-sm flex flex-col items-center hover:shadow-lg transition-shadow"
+                  transition={{ duration: 0.45, delay: i * 0.08 }}
+                  className="p-4 rounded-lg text-center bg-white flex flex-col items-center transition-shadow"
+                  style={{ boxShadow: glowShadow }}
                 >
-                  <div className="text-3xl font-extrabold tracking-tight">{s.value}</div>
+                  <div className="text-3xl font-extrabold tracking-tight text-gray-900">{s.value}</div>
                   <div className="text-xs mt-1 text-gray-600">{s.label}</div>
                 </motion.div>
               ))}
@@ -174,10 +197,10 @@ export default function HowWeWorkPage() {
 
         {/* OUR PROCESS — ADVANCED TIMELINE with individual descriptions */}
         <section className="mt-12">
-          <h3 className="text-2xl font-bold mb-6 text-center ">Our Process</h3>
+          <h3 className="text-2xl font-light mb-6 text-center" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>Our Process</h3>
           <div className="relative">
             {/* central vertical line on md+ */}
-            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-300 via-indigo-200 to-indigo-300" />
+            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-1 rounded-full" style={{ background: `linear-gradient(180deg, ${saffronMid}, ${emeraldMid})` }} />
 
             <div className="space-y-8">
               {process.map((step, i) => {
@@ -194,15 +217,15 @@ export default function HowWeWorkPage() {
                     {isLeft ? (
                       <>
                         <div className="md:col-start-1 md:col-end-2 md:pl-0 pr-6 flex justify-end">
-                          <motion.div whileHover={{ scale: 1.03 }} className="bg-white p-4 rounded-lg shadow-lg hover:shadow-2xl  max-w-md w-[70%] md:mr-10 transition-transform duration-200">
-                            <h4 className="font-semibold">{step.title}</h4>
+                          <motion.div whileHover={{ scale: 1.02 }} className="bg-white p-6 rounded-lg max-w-md w-[70%] md:mr-10 transition-transform duration-200" style={{ boxShadow: glowShadow }}>
+                            <h4 className="font-light text-gray-900" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>{step.title}</h4>
                             <p className="text-sm text-gray-600 mt-2">{step.text}</p>
                           </motion.div>
                         </div>
 
                         <div className="md:col-start-2 md:col-end-3 md:pl-6 relative">
                           <div className="hidden md:block absolute left-0 -ml-6 top-2">
-                            <div className="w-12 h-12 rounded-full bg-white border shadow flex items-center justify-center text-indigo-600 font-bold">
+                            <div className="w-12 h-12 rounded-full bg-white shadow flex items-center justify-center font-bold" style={{ boxShadow: glowShadow, color: saffronMid }}>
                               {step.id}
                             </div>
                           </div>
@@ -212,15 +235,15 @@ export default function HowWeWorkPage() {
                       <>
                         <div className="md:col-start-1 md:col-end-2 md:pr-6 relative">
                           <div className="hidden md:block absolute right-0 -mr-6 top-2">
-                            <div className="w-12 h-12 rounded-full bg-white border shadow flex items-center justify-center text-indigo-600 font-bold">
+                            <div className="w-12 h-12 rounded-full bg-white shadow flex items-center justify-center font-bold" style={{ boxShadow: glowShadow, color: emeraldMid }}>
                               {step.id}
                             </div>
                           </div>
                         </div>
 
                         <div className="md:col-start-2 md:col-end-3 md:pl-0 pl-6 flex justify-start">
-                          <motion.div whileHover={{ scale: 1.03 }} className="bg-white p-4 rounded-lg shadow-lg hover:shadow-2xl max-w-md w-[70%] md:ml-10 transition-transform duration-200 wx-10">
-                            <h4 className="font-semibold">{step.title}</h4>
+                          <motion.div whileHover={{ scale: 1.02 }} className="bg-white p-6 rounded-lg max-w-md w-[70%] md:ml-10 transition-transform duration-200" style={{ boxShadow: glowShadow }}>
+                            <h4 className="font-light text-gray-900" style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, WebkitBackgroundClip: 'text', color: 'transparent' }}>{step.title}</h4>
                             <p className="text-sm text-gray-600 mt-2">{step.text}</p>
                           </motion.div>
                         </div>
@@ -232,7 +255,7 @@ export default function HowWeWorkPage() {
             </div>
 
             {/* mobile-friendly numbered list under the visuals */}
-            <div className="mt-8 md:hidden bg-white p-4 rounded-lg border shadow-sm">
+            <div className="mt-8 md:hidden bg-white p-4 rounded-lg shadow-sm">
               <h4 className="font-semibold">Process (steps)</h4>
               <ol className="mt-3 list-decimal list-inside space-y-2 text-sm text-gray-700">
                 {process.map((p) => (
@@ -250,8 +273,9 @@ export default function HowWeWorkPage() {
           <p className="text-lg font-medium">Want to partner or volunteer with us?</p>
           <div className="mt-4 flex justify-center">
             <a
-              className="inline-block px-6 py-2 rounded-md bg-indigo-600 text-white font-medium shadow hover:shadow-lg transition-shadow"
+              className="inline-block px-6 py-2 rounded-md text-white font-medium shadow-xl hover:shadow-2xl transition-shadow"
               href="/contact"
+              style={{ background: `linear-gradient(90deg, ${saffronMid}, ${emeraldMid})`, boxShadow: strongGlow }}
             >
               Get in touch
             </a>

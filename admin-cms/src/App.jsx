@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import { useAuthStore } from "./stores/authStore.js";
+import LeadsPage from "./pages/LeadsPage.jsx";
 
 
 function Protected({ children }) {
@@ -21,7 +22,16 @@ export default function App() {
           element={
             <Protected>
               <Dashboard />
+            
              
+            </Protected>
+          }
+        />
+        <Route
+          path="/leads"
+          element={
+            <Protected>
+              <LeadsPage />
             </Protected>
           }
         />
