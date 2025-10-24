@@ -1,52 +1,54 @@
-// src/config/multer.js
+// src/config/multer.js  (replace your existing multer.js with this or merge)
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-const baseUploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(baseUploadDir)) fs.mkdirSync(baseUploadDir, { recursive: true });
-
-function ensureDir(dirPath) {
-  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+function ensureDirSync(dir) {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const formType = (req.body?.formType || "general").toLowerCase();
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    const dateFolder = `${yyyy}-${mm}-${dd}`;
-    const uploadDir = path.join(baseUploadDir, formType, dateFolder);
-    ensureDir(uploadDir);
-    cb(null, uploadDir);
-  },
+ destination: (req, file, cb) => {
+  try {
+    // prefer req.query.formType, then header, then custom property, else 'misc'
+    // NOTE: don't assign to req.query
+    const formTypeFromQuery = (req.query && typeof req.query === "object" && req.query.formType) ? req.query.formType : undefined;
+    const formType = formTypeFromQuery || req.headers["x-form-type"] || req._formType || "misc";
+
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const uploadsRoot = path.resolve(process.cwd(), "uploads");
+    const dest = path.join(uploadsRoot, formType, dateStr);
+
+    ensureDirSync(dest);
+    cb(null, dest);
+  } catch (err) {
+    cb(err);
+  }
+},
   filename: (req, file, cb) => {
+    // keep original name but prefix timestamp to avoid collisions
     const ext = path.extname(file.originalname);
-    const safeBase = path.basename(file.originalname, ext)
-      .replace(/\s+/g, "_")
-      .replace(/[^a-zA-Z0-9_-]/g, "");
-    const unique = Date.now() + "-" + Math.random().toString(36).slice(2,8);
-    cb(null, `${unique}_${safeBase}${ext}`);
+    const name = path.basename(file.originalname, ext).replace(/\s+/g, "-");
+    const timestamp = Date.now();
+    cb(null, `${timestamp}-${name}${ext}`);
   }
 });
 
-function fileFilter(req, file, cb) {
-  const allowed = [
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "image/jpeg",
-    "image/png",
-    "image/jpg"
-  ];
-  if (allowed.includes(file.mimetype)) cb(null, true);
-  else cb(new Error("Unsupported file type"), false);
-}
+const fileFilter = (req, file, cb) => {
+  // optional: allow images, pdfs, videos
+  const allowed = /jpeg|jpg|png|webp|gif|pdf|mp4|mov|mpeg/;
+  const ext = path.extname(file.originalname).toLowerCase();
+  const mimetype = file.mimetype;
+  if (allowed.test(ext) || allowed.test(mimetype)) cb(null, true);
+  else cb(null, false);
+};
 
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  limits: {
+    fieldSize: 10 * 1024 * 1024, // 10MB per field (adjust)
+    fileSize: 200 * 1024 * 1024  // 200MB max file (adjust as needed)
+  }
 });

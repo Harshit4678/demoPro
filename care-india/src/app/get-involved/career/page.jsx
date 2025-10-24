@@ -5,7 +5,7 @@ import TopCarousel from "@/components/TopCarousel";
 import { useThemeStore } from "@/stores/themeStore";
 import { motion } from "framer-motion";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
 
 export default function CareerFormPage() {
   const { saffronMid, emeraldMid, GRAD_SOFT, headingAnimEnabled } = useThemeStore();

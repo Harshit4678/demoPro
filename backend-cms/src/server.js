@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import aboutRoutes from "./routes/who-we-are/aboutRoutes.js";
 import leadsRoutes from "./routes/leads.js";
+import casesRoutes from "./routes/casesRoutes.js";
 
 const app = express();
 
@@ -97,6 +98,7 @@ app.get("/", (req, res) => res.json({ ok: true, msg: "CareIndia Backend CMS" }))
 app.use("/api/auth", authRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/leads", leadsRoutes);
+app.use("/api/cases", casesRoutes);
 
 // health check (keep above error handler)
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

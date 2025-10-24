@@ -9,7 +9,7 @@ export default function AboutPage() {
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN || "http://localhost:5000";
+  const API_ORIGIN = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
 
   useEffect(() => {
     let mounted = true;
