@@ -12,6 +12,9 @@ import errorMiddleware from "./middleware/errorMiddleware.js";
 import aboutRoutes from "./routes/who-we-are/aboutRoutes.js";
 import leadsRoutes from "./routes/leads.js";
 import casesRoutes from "./routes/casesRoutes.js";
+import storiesRoutes from "./routes/storiesRoutes.js"
+import galleryRoutes from "./routes/galleryRoutes.js";
+
 
 const app = express();
 
@@ -99,6 +102,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/leads", leadsRoutes);
 app.use("/api/cases", casesRoutes);
+app.use("/api/stories", storiesRoutes);
+app.use("/api", galleryRoutes);
 
 // health check (keep above error handler)
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

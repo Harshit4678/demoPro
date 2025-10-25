@@ -50,7 +50,6 @@ function Bubble({ id, logo, size = 110, initial, containerRef, onActivate, zInde
   const [mode, setMode] = useState("sphere"); // sphere | exploding | revealed | assembling
   const prefersReduceRef = useRef(false);
 
-
   useEffect(() => {
     if (typeof window !== "undefined" && window.matchMedia) {
       prefersReduceRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -297,29 +296,27 @@ function Bubble({ id, logo, size = 110, initial, containerRef, onActivate, zInde
       </div>
 
       {/* revealed card */}
-<div
-  className={`absolute -left-2 -top-2 w-[calc(100%+16px)] h-[calc(100%+16px)] rounded-xl p-2 flex items-center justify-center text-center transition-opacity duration-220 ${
-    mode === "revealed" || mode === "assembling"
-      ? "opacity-100"
-      : "opacity-0 pointer-events-none"
-  }`}
-  style={{
-    background: "linear-gradient(135deg, #fffdf7, #fffbea)", // lighter cream bg
-    boxShadow: `
-      0 0 12px 2px rgba(255,153,51,0.35),   /* saffron */
-      0 0 18px 4px rgba(16,185,129,0.28),   /* emerald */
-    
-      0 0 30px 8px rgba(255,253,245,0.2),   /* cream-white */
-      0 8px 22px rgba(0,0,0,0.08)            /* base subtle shadow */
-    `,
-  }}
->
-  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-    <img src={logo} alt="" className="w-2/3 h-2/3 object-contain" />
-    <div className="text-xs text-slate-600">Tap again to close</div>
-  </div>
-</div>
-
+      <div
+        className={`absolute -left-2 -top-2 w-[calc(100%+16px)] h-[calc(100%+16px)] rounded-xl p-2 flex items-center justify-center text-center transition-opacity duration-220 ${
+          mode === "revealed" || mode === "assembling"
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
+        }`}
+        style={{
+          background: "linear-gradient(135deg, #fffdf7, #fffbea)", // lighter cream bg
+          boxShadow: `
+            0 0 12px 2px rgba(255,153,51,0.35),   /* saffron */
+            0 0 18px 4px rgba(16,185,129,0.28),   /* emerald */
+            0 0 30px 8px rgba(255,253,245,0.2),   /* cream-white */
+            0 8px 22px rgba(0,0,0,0.08)            /* base subtle shadow */
+          `,
+        }}
+      >
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+          <img src={logo} alt="" className="w-2/3 h-2/3 object-contain" />
+          <div className="text-xs text-slate-600">Tap again to close</div>
+        </div>
+      </div>
 
       {/* particle canvas */}
       <canvas
@@ -334,6 +331,7 @@ function Bubble({ id, logo, size = 110, initial, containerRef, onActivate, zInde
 /* -------- Parent container (Tailwind + theme) -------- */
 export default function OurPartners() {
   const containerRef = useRef(null);
+  const headingRef = useRef(null);
   const [bubbles, setBubbles] = useState([]);
   const zCounterRef = useRef(1000); // will increment for bring-to-front
   const zMapRef = useRef({}); // id -> zIndex
@@ -350,18 +348,37 @@ export default function OurPartners() {
   useEffect(() => {
     const init = () => {
       const c = containerRef.current;
-      const w = c?.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1024);
-      const h = c?.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 768);
+      if (!c) return;
+      const w = c.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1024);
+      const h = c.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 768);
+
+      // measure heading height (relative to container)
+      const headingEl = headingRef.current;
+      const headingRect = headingEl ? headingEl.getBoundingClientRect() : null;
+      const containerRect = c.getBoundingClientRect();
+      // headingBottom relative to container top
+      const headingBottom = headingRect ? Math.max(0, headingRect.bottom - containerRect.top) : 0;
+
+      // keep a comfortable gap below heading
+      const topMargin = Math.ceil(headingBottom + 12); // 12px extra gap
+
       const arr = LOGOS.map((logo, i) => {
         const size = 80 + Math.floor(Math.random() * 70); // 80..150
-        const left = Math.round((Math.random() * 0.75 + 0.1) * (w - size));
-        const top = Math.round((Math.random() * 0.75 + 0.06) * (h - size));
+        // limit left to [5%..85%] of width minus size
+        const left = Math.round((Math.random() * 0.75 + 0.1) * Math.max(0, w - size));
+        // ensure top >= topMargin and <= h - size - 12
+        const availableH = Math.max(1, h - topMargin - size - 12);
+        const top = topMargin + Math.round(Math.random() * availableH);
         const vx = rand(-80, 80);
         const vy = rand(-60, 60);
         zMapRef.current[i] = 100 + i; // baseline z
         return { logo, size, left, top, vx, vy, id: i };
       });
       setBubbles(arr);
+
+      // apply padding-top to container so bubbles never overlap visual heading
+      c.style.paddingTop = `${topMargin}px`;
+
       setTick((t) => t + 1);
     };
     init();
@@ -377,23 +394,23 @@ export default function OurPartners() {
   return (
     <section
       ref={containerRef}
-      className="relative overflow-hidden h-[120vh] md:h-[100vh] w-full"
+      className="relative overflow-hidden h-[120vh] md:h-[120vh] w-full"
       style={{
         background: `radial-gradient(circle at 20% 20%, ${theme.saffron}10 0%, transparent 30%), radial-gradient(circle at 80% 80%, ${theme.emerald}10 0%, transparent 30%), #fff`,
       }}
       aria-label="Our partners"
     >
       {/* heading */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10000] text-center w-full">
-      <h2
-  className="m-0 font-light text-3xl md:text-5xl bg-gradient-to-r from-[var(--saffron)] via-[var(--emerald)] to-[var(--saffron)] bg-[length:200%_200%] animate-gradient-move bg-clip-text text-transparent pt-10"
-  style={{
-    "--saffron": theme.saffron,
-    "--emerald": theme.emerald,
-  }}
->
-  Our Partners
-</h2>
+      <div ref={headingRef} className="absolute top-6 left-1/2 -translate-x-1/2 z-[10000] text-center w-full">
+        <h2
+          className="m-0 font-light text-3xl md:text-5xl bg-gradient-to-r from-[var(--saffron)] via-[var(--emerald)] to-[var(--saffron)] bg-[length:200%_200%] animate-gradient-move bg-clip-text text-transparent pt-10"
+          style={{
+            "--saffron": theme.saffron,
+            "--emerald": theme.emerald,
+          }}
+        >
+          Our Partners
+        </h2>
 
         <p className="mt-1 text-sm text-slate-600">Tap / click a bubble to explore — clicked bubble will appear on top</p>
       </div>

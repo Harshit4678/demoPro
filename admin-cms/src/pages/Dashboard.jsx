@@ -9,6 +9,10 @@ import LeadsPage from "./LeadsPage";
 // import cases admin components (path adjust karo agar alag ho)
 import CasesList from "./CasesList";
 import CaseEditor from "../components/CaseEditor";
+import SectionGallery from "../components/SectionGallery";
+
+// <-- NEW: Stories admin page (simple single-file admin view)
+import StoriesAdmin from "./StoriesAdmin";
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
@@ -31,7 +35,9 @@ export default function Dashboard() {
     { id: "services", label: "Services" },
     { id: "contact", label: "Contact Page" },
     { id: "leads", label: "Leads Dashboard" },
-    { id: "cases", label: "Cases" } // Cases tab
+    { id: "cases", label: "Cases" }, // Cases tab
+    { id: "stories", label: "Stories" } ,// <-- NEW: Stories tab
+    { id: "gallery", label: "Section Gallery" },
   ];
 
   function openCreate() {
@@ -184,6 +190,18 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+
+            {/* NEW: Stories admin area */}
+            {activeTab === "stories" && (
+              <div>
+                <StoriesAdmin />
+              </div>
+            )}
+            {activeTab === "gallery" && (
+             <div className="p-4">
+             <SectionGallery />
+              </div>
+               )}
           </div>
         </main>
       </div>

@@ -1,8 +1,10 @@
-// File: src/components/StoriesShowcasePremium.jsx
+// src/components/StoriesShowcasePremium.jsx
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useThemeStore } from "@/stores/themeStore";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
 
 /* small helper to convert #rrggbb to "r,g,b" for CSS rgba usage */
 function hexToRgb(hex) {
@@ -18,15 +20,7 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
-const STORIES = [
-  { id: "1", name: "Simran's Journey", excerpt: "Simran is 29 years old from Chunna Bhati — rebuilding life with our help.", image: "/images/storiesCorousal/simran.webp" },
-  { id: "2", name: "Priya", excerpt: "Priya's path from struggle to stable livelihood.", image: "/images/storiesCorousal/priya.webp" },
-  { id: "3", name: "Muskan", excerpt: "Muskan learning skills and finding independence.", image: "/images/storiesCorousal/muskan.webp" },
-  { id: "4", name: "Sumita Dahiya", excerpt: "Sumita's courage to rebuild and lead her community.", image: "/images/storiesCorousal/sumita.webp" },
-  { id: "5", name: "Reeta Devi", excerpt: "Reeta's struggle to dignity and hope.", image: "/images/storiesCorousal/reena.webp" },
-];
-
-export default function StoriesShowcasePremium({ stories = STORIES }) {
+export default function StoriesCarousal({ stories: initialStories = null }) {
   const router = useRouter();
   const { saffronMid, emeraldMid, GRAD, GRAD_SOFT } = useThemeStore();
   const brand = saffronMid || "#FF9933";
@@ -34,17 +28,65 @@ export default function StoriesShowcasePremium({ stories = STORIES }) {
   const brandRgb = hexToRgb(brand);
   const emeraldRgb = hexToRgb(emerald);
 
-  const [active, setActive] = useState(stories[0]?.id || null);
+  const [stories, setStories] = useState(initialStories || []);
+  const [loading, setLoading] = useState(!initialStories);
+  const [active, setActive] = useState(null);
   const [playing, setPlaying] = useState(true);
   const containerRef = useRef(null);
   const marqueeRef = useRef(null);
   const cardsRef = useRef([]);
   const [visibleSet, setVisibleSet] = useState(new Set());
 
-  const activeIndex = useMemo(() => stories.findIndex((s) => s.id === active), [active, stories]);
+  const activeIndex = useMemo(() => {
+    if (!stories || stories.length === 0 || !active) return 0;
+    return stories.findIndex((s) => s.id === active);
+  }, [active, stories]);
 
+  // fetch stories if not passed as prop
   useEffect(() => {
-    if (!playing) return;
+    if (initialStories) {
+      setStories(initialStories);
+      setActive(initialStories[0]?.id || null);
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/stories?limit=200`);
+        const data = await res.json();
+        if (data?.ok && Array.isArray(data.stories)) {
+          // map backend shape to what's expected by the component
+          const mapped = data.stories.map((it) => ({
+            id: it._id || String(Math.random()).slice(2),
+            name: it.title || it.name || "Untitled",
+            excerpt: it.cardExcerpt || it.excerpt || "",
+            image: it.cardImage || it.heroImage || "/images/placeholder-story.jpg",
+            slug: it.slug || it._id,
+            original: it
+          }));
+          if (!mounted) return;
+          setStories(mapped);
+          setActive(mapped[0]?.id || null);
+        } else {
+          // fallback empty
+          if (mounted) setStories([]);
+        }
+      } catch (err) {
+        console.error("Failed to load stories for showcase:", err);
+        if (mounted) setStories([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [initialStories]);
+
+  // autoplay
+  useEffect(() => {
+    if (!playing || stories.length === 0) return;
     const id = setInterval(() => {
       setActive((cur) => {
         const idx = stories.findIndex((s) => s.id === cur);
@@ -131,6 +173,23 @@ export default function StoriesShowcasePremium({ stories = STORIES }) {
 
   const doubled = [...stories, ...stories];
 
+  // placeholder if loading or none
+  if (loading) {
+    return (
+      <section className="py-14">
+        <div className="max-w-7xl mx-auto px-4">Loading stories...</div>
+      </section>
+    );
+  }
+
+  if (!stories || stories.length === 0) {
+    return (
+      <section className="py-14">
+        <div className="max-w-7xl mx-auto px-4">No stories available</div>
+      </section>
+    );
+  }
+
   return (
     <section
       ref={containerRef}
@@ -196,7 +255,7 @@ export default function StoriesShowcasePremium({ stories = STORIES }) {
                         ref={(el) => { cardsRef.current[idx] = el; }}
                         onMouseEnter={(e) => handleCardHover(s.id, e)}
                         onMouseLeave={handleCardLeave}
-                        onClick={() => router.push(`/stories/${s.id}`)}
+                        onClick={() => router.push(`/stories/${s.slug || s.id}`)}
                         className={`card min-w-[220px] max-w-[220px] rounded-xl overflow-visible border bg-white flex-shrink-0 cursor-pointer card-entrance`}
                         role="button"
                         tabIndex={0}
@@ -215,6 +274,7 @@ export default function StoriesShowcasePremium({ stories = STORIES }) {
                             alt={s.name}
                             className="rounded-2xl"
                             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                            loading={isVisible ? "eager" : "lazy"}
                           />
                           <div className="absolute left-3 bottom-3 bg-white/95 px-2 py-1 rounded-md text-xs font-semibold" style={{ border: "1px solid rgba(0,0,0,0.04)", zIndex: 2 }}>{s.name}</div>
                         </div>
@@ -222,7 +282,7 @@ export default function StoriesShowcasePremium({ stories = STORIES }) {
                         <div className="p-3 text-sm text-slate-700" style={{ zIndex: 1 }}>
                           <div className="line-clamp-2 mb-3">{s.excerpt}</div>
                           <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/stories/${s.id}`); }}
+                            onClick={(e) => { e.stopPropagation(); router.push(`/stories/${s.slug || s.id}`); }}
                             className="px-3 py-1 rounded-md text-xs font-semibold"
                             style={{
                               background: "var(--brand)",

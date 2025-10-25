@@ -2,26 +2,18 @@
 import jwt from "jsonwebtoken";
 import AdminUser from "../models/adminModel.js";
 
-/**
- * Helper: extract token from header or cookie
- */
+/* token extractor */
 function getTokenFromReq(req) {
   if (req.headers && req.headers.authorization) {
     const parts = req.headers.authorization.split(" ");
     if (parts.length === 2 && /^Bearer$/i.test(parts[0])) return parts[1];
-    // fallback: if header has only token
     if (parts.length === 1) return parts[0];
   }
-  // Also allow cookie named 'token' (if you send JWT in cookie)
   if (req.cookies && req.cookies.token) return req.cookies.token;
   return null;
 }
 
-/**
- * authOptional
- * - If token present and valid, attaches req.user (AdminUser doc without password)
- * - If no token or invalid token, just continues without failing
- */
+/* authOptional */
 export async function authOptional(req, res, next) {
   try {
     const token = getTokenFromReq(req);
@@ -32,20 +24,15 @@ export async function authOptional(req, res, next) {
     if (user) {
       req.user = user;
       req.userId = user._id;
-      req.userRole = user.role || user.roleName || "admin";
+      req.userRole = (user.role || user.roleName || "admin").toString();
     }
     return next();
   } catch (err) {
-    // don't block the request on token errors for authOptional
     return next();
   }
 }
 
-/**
- * authRequired
- * - If token missing/invalid => 401
- * - Else attaches req.user and proceeds
- */
+/* authRequired */
 export async function authRequired(req, res, next) {
   try {
     const token = getTokenFromReq(req);
@@ -57,7 +44,6 @@ export async function authRequired(req, res, next) {
     } catch (err) {
       return res.status(401).json({ message: "Unauthorized: invalid or expired token" });
     }
-
     if (!payload?.id) return res.status(401).json({ message: "Unauthorized: invalid token payload" });
 
     const user = await AdminUser.findById(payload.id).select("-password");
@@ -65,7 +51,10 @@ export async function authRequired(req, res, next) {
 
     req.user = user;
     req.userId = user._id;
-    req.userRole = user.role || user.roleName || "admin";
+    req.userRole = (user.role || user.roleName || "admin").toString();
+
+    // debug log (temporary) - comment out after debugging
+    console.log("DEBUG authRequired - req.user:", { id: String(req.user._id), role: req.userRole });
 
     return next();
   } catch (err) {
@@ -74,13 +63,10 @@ export async function authRequired(req, res, next) {
   }
 }
 
-/**
- * isAdmin
- * - Require authRequired first (ensures req.user exists)
- * - Then check role (flexible: accepts 'admin' or 'superadmin' or 'manager' etc.)
- * - You can adapt roles list as per your adminModel
- */
-const ADMIN_ROLES = (process.env.ADMIN_ROLES || "admin,superadmin,owner,manager").split(",").map(r=>r.trim().toLowerCase());
+/* ADMIN roles list - includes root by default */
+const ADMIN_ROLES = (process.env.ADMIN_ROLES || "admin,superadmin,owner,manager,root")
+  .split(",")
+  .map(r => r.trim().toLowerCase());
 
 export function isAdmin(req, res, next) {
   if (!req.user) {
@@ -88,18 +74,13 @@ export function isAdmin(req, res, next) {
   }
   const role = (req.user.role || req.userRole || "").toString().toLowerCase();
   if (!ADMIN_ROLES.includes(role)) {
+    console.warn("isAdmin check failed for user:", { id: String(req.user._id), role });
     return res.status(403).json({ message: "Forbidden: admin access required" });
   }
   return next();
 }
 
-
-
-/**
- * requireRole(roleString)
- * - factory to check for a specific role
- * e.g. router.get("/secret", authRequired, requireRole("superadmin"), handler)
- */
+/* requireRole factory */
 export function requireRole(roleName) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
